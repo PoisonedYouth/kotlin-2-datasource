@@ -1,0 +1,21 @@
+POST http://localhost:8080/api/v1/address
+Content-Type: application/json
+
+{
+  "street": "Main Street",
+  "city" : "Los Angeles",
+  "zipCode": 90001
+}
+
+###
+POST http://localhost:8080/api/v1/customer
+Content-Type: application/json
+
+{
+  "firstName" : "John",
+  "lastName" : "Doe",
+  "age": 42
+}
+
+###
+
