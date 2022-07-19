@@ -1,0 +1,27 @@
+version: '3.3'
+services:
+  database1:
+    image: mysql:8.0.29
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db1'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+  database2:
+    image: mysql:8.0.29
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db2'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3307:3306'
+    volumes:
+      - db2:/var/lib/mysql
+volumes:
+  db1:
+  db2:
