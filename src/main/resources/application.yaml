@@ -2,14 +2,14 @@ spring:
   datasource:
     hikari:
       primary:
-        jdbc-url: 'jdbc:h2:file:./db1'
-        username: root
+        jdbc-url: 'jdbc:mysql://localhost:3306/db1'
+        username: user
         password: password
-        driverClassName: org.h2.Driver
+        driverClassName: com.mysql.cj.jdbc.Driver
       secondary:
-        jdbc-url: 'jdbc:h2:file:./db2'
-        username: root
+        jdbc-url: 'jdbc:mysql://localhost:3307/db2'
+        username: user
         password: password
-        driverClassName: org.h2.Driver
+        driverClassName: com.mysql.cj.jdbc.Driver
   main:
     allow-bean-definition-overriding: true

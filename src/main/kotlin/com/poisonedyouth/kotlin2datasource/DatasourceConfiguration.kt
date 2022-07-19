@@ -18,7 +18,7 @@ class DatasourceConfiguration {
     @Bean
     @Primary
     @ConfigurationProperties(prefix = "spring.datasource.hikari.primary")
-    fun primaryHikariConfig(): HikariConfig? {
+    fun primaryHikariConfig(): HikariConfig {
         return HikariConfig()
     }
 
@@ -40,12 +40,11 @@ class DatasourceConfiguration {
     }
 
     @Bean
-    @Qualifier("CustomerDB")
     @Primary
     fun primaryTransactionManager() = SpringTransactionManager(primaryDataSource())
 
     @Bean
-    @Qualifier("AddressDB")
+    @Qualifier("CustomDB")
     fun secondaryTransactionManager() = SpringTransactionManager(secondaryDataSource())
 }
 
