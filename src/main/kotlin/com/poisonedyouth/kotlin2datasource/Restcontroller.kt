@@ -45,8 +45,13 @@ class Restcontroller(
         consumes = [MediaType.APPLICATION_JSON_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
-    fun addAddress(@RequestBody address: Address): ResponseEntity<Address> {
-        return ResponseEntity.ok(addressRepository.saveAddress(address))
+    fun addAddress(@RequestBody address: Address): ResponseEntity<Any> {
+        val addressNew = addressRepository.saveAddress(address)
+        val location: URI = ServletUriComponentsBuilder
+            .fromCurrentRequest().path("/{id}")
+            .buildAndExpand(addressNew.id).toUri()
+
+        return ResponseEntity.created(location).body(addressNew)
     }
 
     @GetMapping(
