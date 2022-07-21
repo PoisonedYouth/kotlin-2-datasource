@@ -25,7 +25,6 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-spring-boot-starter:0.38.2")
     runtimeOnly("mysql:mysql-connector-java:8.0.29")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.testcontainers:junit-jupiter")
 }
 
 dependencyManagement {

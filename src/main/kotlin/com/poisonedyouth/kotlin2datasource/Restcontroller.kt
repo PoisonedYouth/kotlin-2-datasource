@@ -2,9 +2,14 @@ package com.poisonedyouth.kotlin2datasource
 
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+import java.net.URI
 
 
 @RestController
@@ -18,8 +23,21 @@ class Restcontroller(
         consumes = [MediaType.APPLICATION_JSON_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
-    fun addCustomer(@RequestBody customer: Customer): ResponseEntity<Long> {
-        return ResponseEntity.ok(customerRepository.saveCustomer(customer))
+    fun addCustomer(@RequestBody customer: Customer): ResponseEntity<Any> {
+        val customerNew = customerRepository.saveCustomer(customer)
+        val location: URI = ServletUriComponentsBuilder
+            .fromCurrentRequest().path("/{id}")
+            .buildAndExpand(customerNew.id).toUri()
+
+        return ResponseEntity.created(location).body(customerNew)
+    }
+
+    @GetMapping(
+        "/api/v1/customer/{id}",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getCustomerById(@RequestParam id: Long): ResponseEntity<Customer> {
+        return ResponseEntity.ok(customerRepository.findCustomerById(id))
     }
 
     @PostMapping(
@@ -27,7 +45,15 @@ class Restcontroller(
         consumes = [MediaType.APPLICATION_JSON_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
-    fun addAddress(@RequestBody address: Address): ResponseEntity<Long> {
+    fun addAddress(@RequestBody address: Address): ResponseEntity<Address> {
         return ResponseEntity.ok(addressRepository.saveAddress(address))
+    }
+
+    @GetMapping(
+        "/api/v1/address/{id}",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getAddressById(@PathVariable id: Long): ResponseEntity<Address> {
+        return ResponseEntity.ok(addressRepository.findAddressById(id))
     }
 }
