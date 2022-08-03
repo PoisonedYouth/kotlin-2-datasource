@@ -23,6 +23,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.exposed:exposed-spring-boot-starter:0.38.2")
+    implementation("org.springframework.boot:spring-boot-starter-jta-atomikos")
+
     runtimeOnly("mysql:mysql-connector-java:8.0.29")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

@@ -1,29 +1,34 @@
 package com.poisonedyouth.kotlin2datasource
 
+import javax.sql.DataSource
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Database.Companion
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Propagation.REQUIRED
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-@Transactional(transactionManager = "secondaryTransactionManager", propagation = REQUIRED)
-class AddressRepository {
+class AddressRepository(@SecondaryDataSource private val dataSource: DataSource) {
 
-    fun saveAddress(address: Address): Address {
-        val id = AddressTable.insertAndGetId {
-            it[street] = address.street
-            it[city] = address.city
-            it[zipCode] = address.zipCode
-        }.value
-        return address.copy(
-            id = id
-        )
-    }
+    fun saveAddress(address: Address): Address =
+        transaction(Database.connect(dataSource)) {
+            val id = AddressTable.insertAndGetId {
+                it[street] = address.street
+                it[city] = address.city
+                it[zipCode] = address.zipCode
+            }.value
+            return@transaction address.copy(
+                id = id
+            )
+        }
 
-    fun findAddressById(id: Long): Address? {
-        return AddressTable.select { AddressTable.id eq id }.singleOrNull()?.let {
+    fun findAddressById(id: Long): Address? = transaction(Companion.connect(dataSource)) {
+        AddressTable.select { AddressTable.id eq id }.singleOrNull()?.let {
             Address(
                 id = it[AddressTable.id].value,
                 street = it[AddressTable.street],
@@ -33,6 +38,7 @@ class AddressRepository {
         }
     }
 }
+
 
 object AddressTable : LongIdTable(name = "address", columnName = "id") {
     val street = varchar("street", 255)

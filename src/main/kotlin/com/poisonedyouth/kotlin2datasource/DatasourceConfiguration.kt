@@ -1,16 +1,18 @@
 package com.poisonedyouth.kotlin2datasource
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
+import com.atomikos.icatch.jta.UserTransactionImp
+import com.atomikos.icatch.jta.UserTransactionManager
+import com.atomikos.jdbc.AtomikosDataSourceBean
 import javax.sql.DataSource
-import org.jetbrains.exposed.spring.SpringTransactionManager
+import javax.transaction.UserTransaction
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.data.transaction.ChainedTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.transaction.jta.JtaTransactionManager
+
 
 @Qualifier("primary")
 annotation class PrimaryDataSource
@@ -22,60 +24,44 @@ annotation class SecondaryDataSource
 @Configuration
 @EnableTransactionManagement
 class DatasourceConfiguration {
+
     @Bean
-    @Primary
     @PrimaryDataSource
+    @Primary
     @ConfigurationProperties(prefix = "spring.datasource.hikari.primary")
-    fun primaryHikariConfig(): HikariConfig {
-        return HikariConfig()
+    fun primaryDataSource(): DataSource {
+        return AtomikosDataSourceBean()
     }
 
     @Bean
-    @PrimaryDataSource
-    @Primary
-    fun primaryDataSource(
-        @PrimaryDataSource hikariConf: HikariConfig
-    ): DataSource {
-        return HikariDataSource(hikariConf)
-    }
-
-    @Bean("primaryTransactionManager")
-    @Primary
-    @PrimaryDataSource
-    fun primaryTransactionManager(
-        @PrimaryDataSource dataSource: DataSource
-    ): SpringTransactionManager {
-        return SpringTransactionManager(dataSource, showSql = true)
-    }
-
-    @Bean
+    @SecondaryDataSource
     @ConfigurationProperties(prefix = "spring.datasource.hikari.secondary")
-    fun secondaryHikariConfig(): HikariConfig {
-        return HikariConfig()
+    fun secondaryDataSource(): DataSource {
+        return AtomikosDataSourceBean()
+    }
+
+    @Bean(initMethod = "init", destroyMethod = "close")
+    fun userTransactionManager(): UserTransactionManager {
+        val userTransactionManager = UserTransactionManager()
+        userTransactionManager.setTransactionTimeout(300)
+        userTransactionManager.forceShutdown = true
+        return userTransactionManager
     }
 
     @Bean
-    @SecondaryDataSource
-    fun secondaryDataSource(
-        hikariConf: HikariConfig
-    ): DataSource {
-        return HikariDataSource(hikariConf)
+    @Primary
+    fun jtaTransactionManager(): JtaTransactionManager {
+        val jtaTransactionManager = JtaTransactionManager()
+        jtaTransactionManager.transactionManager = userTransactionManager()
+        jtaTransactionManager.userTransaction = userTransactionManager()
+        return jtaTransactionManager
     }
 
-    @Bean("secondaryTransactionManager")
-    @SecondaryDataSource
-    fun secondaryTransactionManager(@SecondaryDataSource dataSource: DataSource): SpringTransactionManager {
-        return SpringTransactionManager(
-            _dataSource = dataSource, showSql = true
-        )
-    }
-
-    @Bean("chainedTransactionManager")
-    fun transactionManager(
-        @SecondaryDataSource ds1: SpringTransactionManager,
-        @PrimaryDataSource ds2: SpringTransactionManager
-    ): ChainedTransactionManager? {
-        return ChainedTransactionManager(ds1, ds2)
+    @Bean
+    fun userTransaction(): UserTransaction? {
+        val userTransaction = UserTransactionImp()
+        userTransaction.setTransactionTimeout(60000)
+        return userTransaction
     }
 }
 
