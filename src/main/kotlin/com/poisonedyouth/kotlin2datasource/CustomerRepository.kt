@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-@Transactional(propagation = Propagation.REQUIRED, transactionManager = "primaryTransactionManager")
+@Transactional(propagation = Propagation.REQUIRED)
 class CustomerRepository {
 
     fun saveCustomer(customer: Customer): Customer {
