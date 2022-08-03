@@ -15,7 +15,8 @@ import java.net.URI
 @RestController
 class Restcontroller(
     private val customerRepository: CustomerRepository,
-    private val addressRepository: AddressRepository
+    private val addressRepository: AddressRepository,
+    private val applicationService: ApplicationService
 ) {
 
     @PostMapping(
@@ -60,5 +61,30 @@ class Restcontroller(
     )
     fun getAddressById(@PathVariable id: Long): ResponseEntity<Address> {
         return ResponseEntity.ok(addressRepository.findAddressById(id))
+    }
+
+    @GetMapping(
+        "/api/v1/roleback",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun rollback() : ResponseEntity<Any>{
+        val customer = Customer(
+            firstName = "John",
+            lastName = "Doe",
+            age = 5
+        )
+
+        val address = Address(
+            street = "Main Street",
+            city = "Los Angeles",
+            zipCode = 90001
+        )
+
+        return try {
+            applicationService.saveCustomerAndAddress(customer, address)
+            ResponseEntity.ok().build()
+        } catch (e: Exception) {
+            ResponseEntity.internalServerError().build()
+        }
     }
 }

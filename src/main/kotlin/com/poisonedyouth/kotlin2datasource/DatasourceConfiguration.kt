@@ -9,7 +9,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.data.transaction.ChainedTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
+
+@Qualifier("primary")
+annotation class PrimaryDataSource
+
+@Qualifier("secondary")
+annotation class SecondaryDataSource
 
 
 @Configuration
@@ -17,20 +24,29 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 class DatasourceConfiguration {
     @Bean
     @Primary
+    @PrimaryDataSource
     @ConfigurationProperties(prefix = "spring.datasource.hikari.primary")
     fun primaryHikariConfig(): HikariConfig {
         return HikariConfig()
     }
 
-    @Bean(name = ["primaryDataSource"])
+    @Bean
+    @PrimaryDataSource
     @Primary
-    fun primaryDataSource(): DataSource {
-        return HikariDataSource(primaryHikariConfig())
+    fun primaryDataSource(
+        @PrimaryDataSource hikariConf: HikariConfig
+    ): DataSource {
+        return HikariDataSource(hikariConf)
     }
 
-    @Bean
+    @Bean("primaryTransactionManager")
     @Primary
-    fun primaryTransactionManager() = SpringTransactionManager(primaryDataSource())
+    @PrimaryDataSource
+    fun primaryTransactionManager(
+        @PrimaryDataSource dataSource: DataSource
+    ): SpringTransactionManager {
+        return SpringTransactionManager(dataSource, showSql = true)
+    }
 
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource.hikari.secondary")
@@ -38,13 +54,28 @@ class DatasourceConfiguration {
         return HikariConfig()
     }
 
-    @Bean(name = ["secondaryDataSource"])
-    fun secondaryDataSource(): DataSource {
-        return HikariDataSource(secondaryHikariConfig())
+    @Bean
+    @SecondaryDataSource
+    fun secondaryDataSource(
+        hikariConf: HikariConfig
+    ): DataSource {
+        return HikariDataSource(hikariConf)
     }
 
-    @Bean
-    @Qualifier("CustomDB")
-    fun secondaryTransactionManager() = SpringTransactionManager(secondaryDataSource())
+    @Bean("secondaryTransactionManager")
+    @SecondaryDataSource
+    fun secondaryTransactionManager(@SecondaryDataSource dataSource: DataSource): SpringTransactionManager {
+        return SpringTransactionManager(
+            _dataSource = dataSource, showSql = true
+        )
+    }
+
+    @Bean("chainedTransactionManager")
+    fun transactionManager(
+        @SecondaryDataSource ds1: SpringTransactionManager,
+        @PrimaryDataSource ds2: SpringTransactionManager
+    ): ChainedTransactionManager? {
+        return ChainedTransactionManager(ds1, ds2)
+    }
 }
 
