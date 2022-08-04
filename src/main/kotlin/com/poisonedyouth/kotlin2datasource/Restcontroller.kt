@@ -1,5 +1,9 @@
 package com.poisonedyouth.kotlin2datasource
 
+import com.poisonedyouth.kotlin2datasource.primary.Customer
+import com.poisonedyouth.kotlin2datasource.primary.CustomerRepository
+import com.poisonedyouth.kotlin2datasource.secondary.Address
+import com.poisonedyouth.kotlin2datasource.secondary.AddressRepository
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -25,7 +29,7 @@ class Restcontroller(
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun addCustomer(@RequestBody customer: Customer): ResponseEntity<Any> {
-        val customerNew = customerRepository.saveCustomer(customer)
+        val customerNew = customerRepository.save(customer)
         val location: URI = ServletUriComponentsBuilder
             .fromCurrentRequest().path("/{id}")
             .buildAndExpand(customerNew.id).toUri()
@@ -38,7 +42,7 @@ class Restcontroller(
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getCustomerById(@RequestParam id: Long): ResponseEntity<Customer> {
-        return ResponseEntity.ok(customerRepository.findCustomerById(id))
+        return ResponseEntity.ok(customerRepository.findById(id).get())
     }
 
     @PostMapping(
@@ -47,7 +51,7 @@ class Restcontroller(
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun addAddress(@RequestBody address: Address): ResponseEntity<Any> {
-        val addressNew = addressRepository.saveAddress(address)
+        val addressNew = addressRepository.save(address)
         val location: URI = ServletUriComponentsBuilder
             .fromCurrentRequest().path("/{id}")
             .buildAndExpand(addressNew.id).toUri()
@@ -60,7 +64,7 @@ class Restcontroller(
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getAddressById(@PathVariable id: Long): ResponseEntity<Address> {
-        return ResponseEntity.ok(addressRepository.findAddressById(id))
+        return ResponseEntity.ok(addressRepository.findById(id).get())
     }
 
     @GetMapping(
@@ -84,6 +88,7 @@ class Restcontroller(
             applicationService.saveCustomerAndAddress(customer, address)
             ResponseEntity.ok().build()
         } catch (e: Exception) {
+            e.printStackTrace()
             ResponseEntity.internalServerError().build()
         }
     }
